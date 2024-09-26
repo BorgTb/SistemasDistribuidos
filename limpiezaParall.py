@@ -154,10 +154,13 @@ def aplicar_erosion():
         time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} seconds")
         memory_label.config(text=f"Memoria usada: {memory_used:.4f} MB")
         cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
-    
-    # Crear un hilo para ejecutar el proceso de erosión
-    hilo_erosion = threading.Thread(target=proceso_erosion)
-    hilo_erosion.start()
+
+    if modo_paralelo.get():
+        # Crear un hilo para ejecutar el proceso de erosión
+        hilo_erosion = threading.Thread(target=proceso_erosion)
+        hilo_erosion.start()
+    else:
+        proceso_erosion()
 
 # Función para aplicar dilatación según la figura seleccionada
 def aplicar_dilatacion():
@@ -185,10 +188,13 @@ def aplicar_dilatacion():
         time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} seconds")
         memory_label.config(text=f"Memoria utilizada: {memory_used:.4f} MB")
         cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
-    
-    # Crear un hilo para ejecutar el proceso de dilatación
-    hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
-    hilo_dilatacion.start()
+
+    if modo_paralelo.get():
+        # Crear un hilo para ejecutar el proceso de dilatación
+        hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
+        hilo_dilatacion.start()
+    else:
+        proceso_dilatacion()
 
 # Función para cargar la imagen desde el archivo y mostrarla
 def abrir_imagen():
@@ -204,6 +210,9 @@ ventana.title("Erosión y Dilatación Interactiva")
 
 # Variable para almacenar la figura seleccionada
 figura_seleccionada = tk.IntVar(value=1)
+
+# Variable para controlar si el modo es paralelo o secuencial
+modo_paralelo = tk.BooleanVar(value=True)
 
 # Botón para abrir la imagen
 btn_abrir = tk.Button(ventana, text="Abrir Imagen", command=abrir_imagen)
@@ -225,15 +234,6 @@ frame_figuras.pack(side="left", padx=10, pady=10)
 for i, img in enumerate(imagenes_botones, start=1):
     btn_figura = tk.Radiobutton(frame_figuras, image=img, variable=figura_seleccionada, value=i)
     btn_figura.pack(anchor="w")
-
-
-
-
-figuras = []
-
-for texto, valor in figuras:
-    radio = tk.Radiobutton(ventana, text=texto, variable=figura_seleccionada, value=valor)
-    radio.pack(anchor="w")
 
 # Botón para aplicar erosión
 btn_aplicar_erosion = tk.Button(ventana, text="Aplicar Erosión", command=aplicar_erosion)
@@ -258,6 +258,10 @@ memory_label.pack(pady=10)
 # Etiqueta para mostrar el uso de CPU
 cpu_label = tk.Label(ventana, text="CPU usada: ")
 cpu_label.pack(pady=10)
+
+# Botón para alternar entre modo paralelo y secuencial
+btn_cambiar_modo = tk.Checkbutton(ventana, text="Modo Paralelo", variable=modo_paralelo)
+btn_cambiar_modo.pack(pady=10)
 
 # Inicializar la ventana
 ventana.mainloop()
