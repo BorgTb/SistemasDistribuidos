@@ -196,16 +196,18 @@ def aplicar_dilatacion():
 
 # Función para cargar la imagen desde el archivo y mostrarla
 def abrir_imagen():
-    ruta_imagen = filedialog.askopenfilename()
+    # Filtrar solo imágenes PNG
+    ruta_imagen = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
     if ruta_imagen:
         global img_rgb
         img_rgb = cargar_imagen(ruta_imagen)
         mostrar_imagen(img_rgb, "Imagen Original")
 
+
 # Crear la ventana principal
 ventana = tk.Tk()
 ventana.title("Erosión y Dilatación Interactiva")
-ventana.geometry("400x600")
+ventana.geometry("1240x960")
 #ADD scroll to the window
 scrollbar = tk.Scrollbar(ventana)
 
