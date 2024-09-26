@@ -139,7 +139,7 @@ def aplicar_erosion():
         end_time = time.time()
         execution_time = end_time - start_time
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Erosion Time: {execution_time:.4f} seconds")
+        time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} segundos")
     
     # Crear un hilo para ejecutar el proceso de erosión
     hilo_erosion = threading.Thread(target=proceso_erosion)
@@ -157,7 +157,7 @@ def aplicar_dilatacion():
         end_time = time.time()
         execution_time = end_time - start_time
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Dilation Time: {execution_time:.4f} seconds")
+        time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} segundos")
     
     # Crear un hilo para ejecutar el proceso de dilatación
     hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
@@ -212,7 +212,7 @@ label_imagen = tk.Label(ventana)
 label_imagen.pack(pady=10)
 
 # Etiqueta para mostrar el tiempo de ejecución
-time_label = tk.Label(ventana, text="Execution Time: ")
+time_label = tk.Label(ventana, text="Tiempo de ejecución: ")
 time_label.pack(pady=10)
 
 # Inicializar la ventana
