@@ -16,7 +16,7 @@ def erosion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
     pad = kernel.shape[0] // 2
     resultado = np.zeros_like(imagen)
-    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='constant')
+    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')  # Cambiar el modo a 'edge'
 
     for i in range(1, filas + 1):
         for j in range(1, columnas + 1):
@@ -68,7 +68,7 @@ def dilatacion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
     pad = kernel.shape[0] // 2
     resultado = np.zeros_like(imagen)
-    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='constant')
+    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')  # Cambiar el modo a 'edge'
 
     for i in range(1, filas + 1):
         for j in range(1, columnas + 1):
@@ -118,7 +118,7 @@ def dilatacion(imagen, kernel, figura):
 # Función para mostrar una imagen en la ventana de Tkinter
 def mostrar_imagen(imagen_np, titulo):
     imagen_pil = Image.fromarray(imagen_np)
-    imagen_pil.thumbnail((300, 300))  # Redimensionar para ajustarse a la ventana
+    #imagen_pil.thumbnail((300, 300))  # Redimensionar para ajustarse a la ventana
     imagen_tk = ImageTk.PhotoImage(imagen_pil)
     
     # Mostrar en la interfaz
@@ -207,6 +207,14 @@ def abrir_imagen():
 # Crear la interfaz gráfica usando Tkinter
 ventana = tk.Tk()
 ventana.title("Erosión y Dilatación Interactiva")
+ventana.geometry("400x600")
+#ADD scroll to the window
+scrollbar = tk.Scrollbar(ventana)
+
+
+
+
+
 
 # Variable para almacenar la figura seleccionada
 figura_seleccionada = tk.IntVar(value=1)
