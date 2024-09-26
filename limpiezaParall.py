@@ -14,7 +14,6 @@ def cargar_imagen(ruta):
 # Función de erosión manual según la figura seleccionada
 def erosion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
-    pad = kernel.shape[0] // 2
     resultado = np.zeros_like(imagen)
     matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='constant')
 
@@ -66,7 +65,6 @@ def erosion(imagen, kernel, figura):
 # Función de dilatación manual según la figura seleccionada
 def dilatacion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
-    pad = kernel.shape[0] // 2
     resultado = np.zeros_like(imagen)
     matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='constant')
 
@@ -204,64 +202,53 @@ def abrir_imagen():
         img_rgb = cargar_imagen(ruta_imagen)
         mostrar_imagen(img_rgb, "Imagen Original")
 
-# Crear la interfaz gráfica usando Tkinter
+# Crear la ventana principal
 ventana = tk.Tk()
-ventana.title("Erosión y Dilatación Interactiva")
+ventana.title("Procesamiento de Imágenes")
 
-# Variable para almacenar la figura seleccionada
-figura_seleccionada = tk.IntVar(value=1)
+# Crear el marco de selección de figura
+figura_seleccionada = tk.IntVar()
+marco_figura = tk.Frame(ventana)
+marco_figura.pack(pady=10)
 
-# Variable para controlar si el modo es paralelo o secuencial
-modo_paralelo = tk.BooleanVar(value=True)
-
-# Botón para abrir la imagen
-btn_abrir = tk.Button(ventana, text="Abrir Imagen", command=abrir_imagen)
-btn_abrir.pack(pady=10)
-
-# Crear opciones de selección de figuras
-label_figura = tk.Label(ventana, text="Seleccionar Figura:")
-label_figura.pack()
-
-# Cargar imágenes de botones
+# Cargar las imágenes de los botones
 ruta_botones = "img/botones/"
 imagenes_botones = [ImageTk.PhotoImage(Image.open(f"{ruta_botones}btn{i}.png").resize((50, 50))) for i in range(1, 7)]
 
-# Crear un frame para los botones de figuras
-frame_figuras = tk.Frame(ventana)
-frame_figuras.pack(side="left", padx=10, pady=10)
+# Crear botones para seleccionar figura
+for i in range(6):
+    boton_figura = tk.Radiobutton(marco_figura, variable=figura_seleccionada, value=i + 1, 
+                                    image=imagenes_botones[i], indicatoron=False, padx=10, pady=10)
+    boton_figura.pack(side=tk.LEFT)
 
-# Añadir los botones de figuras al frame
-for i, img in enumerate(imagenes_botones, start=1):
-    btn_figura = tk.Radiobutton(frame_figuras, image=img, variable=figura_seleccionada, value=i)
-    btn_figura.pack(anchor="w")
+# Botones de acción
+boton_abrir = tk.Button(ventana, text="Abrir Imagen", command=abrir_imagen)
+boton_abrir.pack(pady=5)
 
-# Botón para aplicar erosión
-btn_aplicar_erosion = tk.Button(ventana, text="Aplicar Erosión", command=aplicar_erosion)
-btn_aplicar_erosion.pack(pady=10)
+boton_erosion = tk.Button(ventana, text="Aplicar Erosión", command=aplicar_erosion)
+boton_erosion.pack(pady=5)
 
-# Botón para aplicar dilatación
-btn_aplicar_dilatacion = tk.Button(ventana, text="Aplicar Dilatación", command=aplicar_dilatacion)
-btn_aplicar_dilatacion.pack(pady=10)
+boton_dilatacion = tk.Button(ventana, text="Aplicar Dilatación", command=aplicar_dilatacion)
+boton_dilatacion.pack(pady=5)
 
-# Etiqueta para mostrar la imagen
+# Etiquetas para mostrar tiempos de ejecución y uso de memoria
+time_label = tk.Label(ventana, text="Tiempo de Erosión: ")
+time_label.pack()
+
+memory_label = tk.Label(ventana, text="Memoria usada: ")
+memory_label.pack()
+
+cpu_label = tk.Label(ventana, text="CPU usada: ")
+cpu_label.pack()
+
+# Opción para seleccionar modo de ejecución
+modo_paralelo = tk.BooleanVar()
+check_modo = tk.Checkbutton(ventana, text="Ejecutar en modo paralelo", variable=modo_paralelo)
+check_modo.pack()
+
+# Crear una etiqueta para mostrar la imagen
 label_imagen = tk.Label(ventana)
 label_imagen.pack(pady=10)
 
-# Etiqueta para mostrar el tiempo de ejecución
-time_label = tk.Label(ventana, text="Tiempo de ejecución: ")
-time_label.pack(pady=10)
-
-# Etiqueta para mostrar el uso de memoria
-memory_label = tk.Label(ventana, text="Memoria usada: ")
-memory_label.pack(pady=10)
-
-# Etiqueta para mostrar el uso de CPU
-cpu_label = tk.Label(ventana, text="CPU usada: ")
-cpu_label.pack(pady=10)
-
-# Botón para alternar entre modo paralelo y secuencial
-btn_cambiar_modo = tk.Checkbutton(ventana, text="Modo Paralelo", variable=modo_paralelo)
-btn_cambiar_modo.pack(pady=10)
-
-# Inicializar la ventana
+# Iniciar el bucle principal de la ventana
 ventana.mainloop()
