@@ -63,8 +63,8 @@ class GestionImagenes:
         img.save(f'img/tipo_Ruido_{porcentaje}.png')
 
 
-g = GestionImagenes("img_1.png")
-g.sal_pimienta(50)
+g = GestionImagenes("ADRIANLINDO.png")
+g.sal_pimienta(10)
 
 g.guardar('R')
 g.guardar('G')

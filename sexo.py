@@ -1,6 +1,8 @@
 import numpy as np
-import threading
-from PIL import Image
+from PIL import Image, ImageTk
+import tkinter as tk
+from tkinter import filedialog
+import threading  # Importar el módulo de hilos
 
 # Función para cargar la imagen
 def cargar_imagen(ruta):
@@ -9,87 +11,97 @@ def cargar_imagen(ruta):
 
 # Función de erosión manual
 def erosion(imagen, kernel):
-    # Tamaño del kernel
-    kernel_size = len(kernel)
-    pad = kernel_size // 2
-    filas, columnas = imagen.shape
-    resultado = np.zeros((filas, columnas), dtype=np.uint8)
+    filas, columnas, _ = imagen.shape
+    pad = kernel.shape[0] // 2
+    resultado = np.zeros_like(imagen)
 
-    # Aplicar erosión
     for i in range(pad, filas - pad):
         for j in range(pad, columnas - pad):
             region = imagen[i - pad:i + pad + 1, j - pad:j + pad + 1]
-            if np.array_equal(region & kernel, kernel):
-                resultado[i, j] = np.min(region)
-            else:
-                resultado[i, j] = 0
+            resultado[i, j] = np.min(region, axis=(0, 1))
 
     return resultado
 
 # Función de dilatación manual
 def dilatacion(imagen, kernel):
-    kernel_size = len(kernel)
-    pad = kernel_size // 2
-    filas, columnas = imagen.shape
-    resultado = np.zeros((filas, columnas), dtype=np.uint8)
+    filas, columnas, _ = imagen.shape
+    pad = kernel.shape[0] // 2
+    resultado = np.zeros_like(imagen)
 
-    # Aplicar dilatación
     for i in range(pad, filas - pad):
         for j in range(pad, columnas - pad):
             region = imagen[i - pad:i + pad + 1, j - pad:j + pad + 1]
-            if np.any(region & kernel):
-                resultado[i, j] = np.max(region)
-            else:
-                resultado[i, j] = 0
+            resultado[i, j] = np.max(region, axis=(0, 1))
 
     return resultado
 
-# Función para mezclar los resultados de erosión y dilatación
-def apertura_y_cierre(imagen_rgb, kernel, output):
-    # Separar los canales de color R, G, B
-    canales = [imagen_rgb[:, :, i] for i in range(3)]
+# Función para mostrar una imagen en la ventana de Tkinter
+def mostrar_imagen(imagen_np, titulo):
+    imagen_pil = Image.fromarray(imagen_np)
+    imagen_pil.thumbnail((300, 300))  # Redimensionar para ajustarse a la ventana
+    imagen_tk = ImageTk.PhotoImage(imagen_pil)
     
-    # Aplicar erosión y luego dilatación (Apertura)
-    erosion_canal = [erosion(canal, kernel) for canal in canales]
-    apertura = [dilatacion(ero, kernel) for ero in erosion_canal]
+    # Mostrar en la interfaz
+    label_imagen.config(image=imagen_tk)
+    label_imagen.image = imagen_tk  # Necesario para que Tkinter mantenga la referencia
+
+    # Actualizar título
+    ventana.title(titulo)
+
+# Función para aplicar erosión en un hilo
+def aplicar_erosion():
+    global img_rgb
+    kernel = np.ones((3, 3, 3), dtype=np.uint8)
+
+    def proceso_erosion():
+        global img_rgb
+        img_rgb = erosion(img_rgb, kernel)
+        mostrar_imagen(img_rgb, "Erosión Aplicada")
     
-    # Aplicar dilatación y luego erosión (Cierre)
-    dilatacion_canal = [dilatacion(canal, kernel) for canal in canales]
-    cierre = [erosion(dil, kernel) for dil in dilatacion_canal]
+    # Crear un hilo para ejecutar el proceso de erosión
+    hilo_erosion = threading.Thread(target=proceso_erosion)
+    hilo_erosion.start()
+
+# Función para aplicar dilatación en un hilo
+def aplicar_dilatacion():
+    global img_rgb
+    kernel = np.ones((3, 3, 3), dtype=np.uint8)
+
+    def proceso_dilatacion():
+        global img_rgb
+        img_rgb = dilatacion(img_rgb, kernel)
+        mostrar_imagen(img_rgb, "Dilatación Aplicada")
     
-    # Crear la imagen resultado de apertura y cierre combinados
-    resultado_apertura = np.stack(apertura, axis=-1)
-    resultado_cierre = np.stack(cierre, axis=-1)
-    
-    # Mezclar los resultados (promediar apertura y cierre)
-    resultado_final = np.clip((resultado_apertura + resultado_cierre) // 2, 0, 255).astype(np.uint8)
-    
-    output.append(('Resultado_Mezcla', resultado_final))
+    # Crear un hilo para ejecutar el proceso de dilatación
+    hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
+    hilo_dilatacion.start()
 
-# Función principal que ejecuta las operaciones con hilos
-def procesar_imagen_con_hilos(ruta_imagen):
-    imagen_rgb = cargar_imagen(ruta_imagen)
+# Función para cargar la imagen desde el archivo y mostrarla
+def abrir_imagen():
+    ruta_imagen = filedialog.askopenfilename()
+    if ruta_imagen:
+        global img_rgb
+        img_rgb = cargar_imagen(ruta_imagen)
+        mostrar_imagen(img_rgb, "Imagen Original")
 
-    # Definir un kernel (elemento estructurante)
-    kernel = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+# Crear la interfaz gráfica usando Tkinter
+ventana = tk.Tk()
+ventana.title("Erosión y Dilatación Interactiva")
 
-    # Lista para almacenar los resultados
-    output = []
+# Botón para abrir la imagen
+btn_abrir = tk.Button(ventana, text="Abrir Imagen", command=abrir_imagen)
+btn_abrir.pack(pady=10)
 
-    # Crear hilo para aplicar apertura y cierre
-    hilo_mezcla = threading.Thread(target=apertura_y_cierre, args=(imagen_rgb, kernel, output))
+# Botones para aplicar las operaciones
+btn_aplicar_erosion = tk.Button(ventana, text="Aplicar Erosión", command=aplicar_erosion)
+btn_aplicar_erosion.pack(pady=10)
 
-    # Iniciar el hilo
-    hilo_mezcla.start()
+btn_aplicar_dilatacion = tk.Button(ventana, text="Aplicar Dilatación", command=aplicar_dilatacion)
+btn_aplicar_dilatacion.pack(pady=10)
 
-    # Esperar a que el hilo termine
-    hilo_mezcla.join()
+# Etiqueta para mostrar la imagen
+label_imagen = tk.Label(ventana)
+label_imagen.pack(pady=10)
 
-    # Guardar y mostrar el resultado
-    for name, result in output:
-        Image.fromarray(result).save(f"{name}.png")
-        Image.fromarray(result).show()
-
-# Ejecutar el procesamiento
-ruta_imagen = 'img/tipo_Ruido_50.png'  # Ruta de la imagen
-procesar_imagen_con_hilos(ruta_imagen)
+# Inicializar la ventana
+ventana.mainloop()
