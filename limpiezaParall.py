@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import filedialog
+import time
 import threading  # Importar el módulo de hilos
 
 # Función para cargar la imagen
@@ -133,8 +134,12 @@ def aplicar_erosion():
 
     def proceso_erosion():
         global img_rgb
+        start_time = time.time()
         img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
+        end_time = time.time()
+        execution_time = end_time - start_time
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
+        time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} segundos")
     
     # Crear un hilo para ejecutar el proceso de erosión
     hilo_erosion = threading.Thread(target=proceso_erosion)
@@ -147,8 +152,12 @@ def aplicar_dilatacion():
 
     def proceso_dilatacion():
         global img_rgb
+        start_time = time.time()
         img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
+        end_time = time.time()
+        execution_time = end_time - start_time
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
+        time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} segundos")
     
     # Crear un hilo para ejecutar el proceso de dilatación
     hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
@@ -177,14 +186,23 @@ btn_abrir.pack(pady=10)
 label_figura = tk.Label(ventana, text="Seleccionar Figura:")
 label_figura.pack()
 
-figuras = [
-    ("Figura 1", 1),
-    ("Figura 2", 2),
-    ("Figura 3", 3),
-    ("Figura 4", 4),
-    ("Figura 5", 5),
-    ("Figura 6", 6)
-]
+# Cargar imágenes de botones
+ruta_botones = "img/botones/"
+imagenes_botones = [ImageTk.PhotoImage(Image.open(f"{ruta_botones}btn{i}.png").resize((50, 50))) for i in range(1, 7)]
+
+# Crear un frame para los botones de figuras
+frame_figuras = tk.Frame(ventana)
+frame_figuras.pack(side="left", padx=10, pady=10)
+
+# Añadir los botones de figuras al frame
+for i, img in enumerate(imagenes_botones, start=1):
+    btn_figura = tk.Radiobutton(frame_figuras, image=img, variable=figura_seleccionada, value=i)
+    btn_figura.pack(anchor="w")
+
+
+
+
+figuras = []
 
 for texto, valor in figuras:
     radio = tk.Radiobutton(ventana, text=texto, variable=figura_seleccionada, value=valor)
@@ -201,6 +219,10 @@ btn_aplicar_dilatacion.pack(pady=10)
 # Etiqueta para mostrar la imagen
 label_imagen = tk.Label(ventana)
 label_imagen.pack(pady=10)
+
+# Etiqueta para mostrar el tiempo de ejecución
+time_label = tk.Label(ventana, text="Tiempo de ejecución: ")
+time_label.pack(pady=10)
 
 # Inicializar la ventana
 ventana.mainloop()

@@ -32,7 +32,7 @@ class GestionImagenes:
                 gray = int(canal[i, j])
                 imagen[i, j] = [gray, gray, gray]  # Escala de grises
         img = Image.fromarray(imagen)
-        img.save(f'img/img_{tipo}.png')
+        img.save(f'pr1/SistemasDistribuidos/img_{tipo}.png')
 
     def clamp(self, value, min_val, max_val):
         return max(min_val, min(max_val, value))
@@ -60,11 +60,11 @@ class GestionImagenes:
             pixeles -= 1
 
         img = Image.fromarray(imagen)
-        img.save(f'img/tipo_Ruido_{porcentaje}.png')
+        img.save(f'pr1/SistemasDistribuidos/tipo_Ruido_{porcentaje}.png')
 
 
-g = GestionImagenes("ADRIANLINDO.png")
-g.sal_pimienta(10)
+g = GestionImagenes("pr1/SistemasDistribuidos/img_1.png")
+g.sal_pimienta(50)
 
 g.guardar('R')
 g.guardar('G')
