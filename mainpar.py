@@ -29,9 +29,9 @@ class GestionImagenes:
                 future.result()
 
         img = Image.fromarray(imagen)
-        img.save(f'pr1/img/tipo_Ruido_{porcentaje}_paralela.png')
+        img.save(f'img/tipo_Ruido_{porcentaje}_paralela.png')
 
 # Uso del código
-g = GestionImagenes("pr1/img/img_1.png")
+g = GestionImagenes("img/img_1.png")
 g.sal_pimienta(50)  # Solución secuencial
 g.sal_pimienta(50, num_hilos=4)  # Solución paralela con 4 hilos
