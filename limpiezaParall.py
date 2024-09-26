@@ -3,7 +3,8 @@ from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import filedialog
 import time
-import threading  # Importar el módulo de hilos
+import threading
+import psutil  # Importar psutil para medir el uso de recursos
 
 # Función para cargar la imagen
 def cargar_imagen(ruta):
@@ -135,11 +136,24 @@ def aplicar_erosion():
     def proceso_erosion():
         global img_rgb
         start_time = time.time()
+        process = psutil.Process()
+        start_memory = process.memory_info().rss
+        start_cpu = process.cpu_percent(interval=None)
+        
         img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
+        
         end_time = time.time()
+        end_memory = process.memory_info().rss
+        end_cpu = process.cpu_percent(interval=None)
+        
         execution_time = end_time - start_time
+        memory_used = (end_memory - start_memory) / (1024 * 1024)  # Convertir a MB
+        cpu_used = end_cpu - start_cpu
+        
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} segundos")
+        time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} seconds")
+        memory_label.config(text=f"Memoria usada: {memory_used:.4f} MB")
+        cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
     
     # Crear un hilo para ejecutar el proceso de erosión
     hilo_erosion = threading.Thread(target=proceso_erosion)
@@ -153,11 +167,24 @@ def aplicar_dilatacion():
     def proceso_dilatacion():
         global img_rgb
         start_time = time.time()
+        process = psutil.Process()
+        start_memory = process.memory_info().rss
+        start_cpu = process.cpu_percent(interval=None)
+        
         img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
+        
         end_time = time.time()
+        end_memory = process.memory_info().rss
+        end_cpu = process.cpu_percent(interval=None)
+        
         execution_time = end_time - start_time
+        memory_used = (end_memory - start_memory) / (1024 * 1024)  # Convertir a MB
+        cpu_used = end_cpu - start_cpu
+        
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} segundos")
+        time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} seconds")
+        memory_label.config(text=f"Memoria utilizada: {memory_used:.4f} MB")
+        cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
     
     # Crear un hilo para ejecutar el proceso de dilatación
     hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
@@ -223,6 +250,14 @@ label_imagen.pack(pady=10)
 # Etiqueta para mostrar el tiempo de ejecución
 time_label = tk.Label(ventana, text="Tiempo de ejecución: ")
 time_label.pack(pady=10)
+
+# Etiqueta para mostrar el uso de memoria
+memory_label = tk.Label(ventana, text="Memoria usada: ")
+memory_label.pack(pady=10)
+
+# Etiqueta para mostrar el uso de CPU
+cpu_label = tk.Label(ventana, text="CPU usada: ")
+cpu_label.pack(pady=10)
 
 # Inicializar la ventana
 ventana.mainloop()
