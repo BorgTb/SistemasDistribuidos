@@ -186,14 +186,23 @@ btn_abrir.pack(pady=10)
 label_figura = tk.Label(ventana, text="Seleccionar Figura:")
 label_figura.pack()
 
-figuras = [
-    ("Figura 1", 1),
-    ("Figura 2", 2),
-    ("Figura 3", 3),
-    ("Figura 4", 4),
-    ("Figura 5", 5),
-    ("Figura 6", 6)
-]
+# Cargar imágenes de botones
+ruta_botones = "img/botones/"
+imagenes_botones = [ImageTk.PhotoImage(Image.open(f"{ruta_botones}btn{i}.png").resize((50, 50))) for i in range(1, 7)]
+
+# Crear un frame para los botones de figuras
+frame_figuras = tk.Frame(ventana)
+frame_figuras.pack(side="left", padx=10, pady=10)
+
+# Añadir los botones de figuras al frame
+for i, img in enumerate(imagenes_botones, start=1):
+    btn_figura = tk.Radiobutton(frame_figuras, image=img, variable=figura_seleccionada, value=i)
+    btn_figura.pack(anchor="w")
+
+
+
+
+figuras = []
 
 for texto, valor in figuras:
     radio = tk.Radiobutton(ventana, text=texto, variable=figura_seleccionada, value=valor)
