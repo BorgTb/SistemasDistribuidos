@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import filedialog
 import time
 import threading
-import psutil  # Importar psutil para medir el uso de recursos
+import psutil  # Para medir el uso de recursos
 
 # Función para cargar la imagen
 def cargar_imagen(ruta):
@@ -15,7 +15,7 @@ def cargar_imagen(ruta):
 def erosion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
     resultado = np.zeros_like(imagen)
-    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')  # Cambiar el modo a 'edge'
+    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')
 
     for i in range(1, filas + 1):
         for j in range(1, columnas + 1):
@@ -66,7 +66,7 @@ def erosion(imagen, kernel, figura):
 def dilatacion(imagen, kernel, figura):
     filas, columnas, _ = imagen.shape
     resultado = np.zeros_like(imagen)
-    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')  # Cambiar el modo a 'edge'
+    matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')
 
     for i in range(1, filas + 1):
         for j in range(1, columnas + 1):
@@ -116,17 +116,14 @@ def dilatacion(imagen, kernel, figura):
 # Función para mostrar una imagen en la ventana de Tkinter
 def mostrar_imagen(imagen_np, titulo):
     imagen_pil = Image.fromarray(imagen_np)
-    #imagen_pil.thumbnail((300, 300))  # Redimensionar para ajustarse a la ventana
     imagen_tk = ImageTk.PhotoImage(imagen_pil)
     
-    # Mostrar en la interfaz
     label_imagen.config(image=imagen_tk)
     label_imagen.image = imagen_tk  # Necesario para que Tkinter mantenga la referencia
 
-    # Actualizar título
     ventana.title(titulo)
 
-# Función para aplicar erosión según la figura seleccionada
+# Función para aplicar erosión
 def aplicar_erosion():
     global img_rgb, figura_seleccionada
     kernel = np.ones((3, 3, 3), dtype=np.uint8)
@@ -149,18 +146,22 @@ def aplicar_erosion():
         cpu_used = end_cpu - start_cpu
         
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Tiempo de erosión: {execution_time:.4f} seconds")
+        
+        if modo_paralelo.get():
+            time_parallel_label.config(text=f"Tiempo paralelo: {execution_time:.4f} seconds")
+        else:
+            time_sequential_label.config(text=f"Tiempo secuencial: {execution_time:.4f} seconds")
+        
         memory_label.config(text=f"Memoria usada: {memory_used:.4f} MB")
         cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
 
     if modo_paralelo.get():
-        # Crear un hilo para ejecutar el proceso de erosión
         hilo_erosion = threading.Thread(target=proceso_erosion)
         hilo_erosion.start()
     else:
         proceso_erosion()
 
-# Función para aplicar dilatación según la figura seleccionada
+# Función para aplicar dilatación
 def aplicar_dilatacion():
     global img_rgb, figura_seleccionada
     kernel = np.ones((3, 3, 3), dtype=np.uint8)
@@ -183,12 +184,16 @@ def aplicar_dilatacion():
         cpu_used = end_cpu - start_cpu
         
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
-        time_label.config(text=f"Tiempo de dilatación: {execution_time:.4f} seconds")
-        memory_label.config(text=f"Memoria utilizada: {memory_used:.4f} MB")
+        
+        if modo_paralelo.get():
+            time_parallel_label.config(text=f"Tiempo paralelo: {execution_time:.4f} seconds")
+        else:
+            time_sequential_label.config(text=f"Tiempo secuencial: {execution_time:.4f} seconds")
+        
+        memory_label.config(text=f"Memoria usada: {memory_used:.4f} MB")
         cpu_label.config(text=f"CPU usada: {cpu_used:.4f} %")
 
     if modo_paralelo.get():
-        # Crear un hilo para ejecutar el proceso de dilatación
         hilo_dilatacion = threading.Thread(target=proceso_dilatacion)
         hilo_dilatacion.start()
     else:
@@ -196,20 +201,16 @@ def aplicar_dilatacion():
 
 # Función para cargar la imagen desde el archivo y mostrarla
 def abrir_imagen():
-    # Filtrar solo imágenes PNG
-    ruta_imagen = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
+    ruta_imagen = filedialog.askopenfilename(filetypes=[("PNG Images", "*.png")])
     if ruta_imagen:
         global img_rgb
         img_rgb = cargar_imagen(ruta_imagen)
         mostrar_imagen(img_rgb, "Imagen Original")
 
-
 # Crear la ventana principal
 ventana = tk.Tk()
 ventana.title("Erosión y Dilatación Interactiva")
 ventana.geometry("1240x960")
-#ADD scroll to the window
-scrollbar = tk.Scrollbar(ventana)
 
 # Crear el marco de selección de figura
 figura_seleccionada = tk.IntVar()
@@ -236,10 +237,14 @@ boton_erosion.pack(pady=5)
 boton_dilatacion = tk.Button(ventana, text="Aplicar Dilatación", command=aplicar_dilatacion)
 boton_dilatacion.pack(pady=5)
 
-# Etiquetas para mostrar tiempos de ejecución y uso de memoria
-time_label = tk.Label(ventana, text="Tiempo de Erosión: ")
-time_label.pack()
+# Etiquetas para mostrar tiempos de ejecución
+time_parallel_label = tk.Label(ventana, text="Tiempo paralelo: ")
+time_parallel_label.pack()
 
+time_sequential_label = tk.Label(ventana, text="Tiempo secuencial: ")
+time_sequential_label.pack()
+
+# Etiquetas para mostrar el uso de memoria y CPU
 memory_label = tk.Label(ventana, text="Memoria usada: ")
 memory_label.pack()
 
