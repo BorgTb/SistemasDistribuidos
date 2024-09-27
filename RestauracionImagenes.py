@@ -207,6 +207,14 @@ def abrir_imagen():
         img_rgb = cargar_imagen(ruta_imagen)
         mostrar_imagen(img_rgb, "Imagen Original")
 
+def guardar_imagen():
+    if img_rgb is not None:
+        ruta_guardado = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")])
+        if ruta_guardado:
+            imagen_pil = Image.fromarray(img_rgb)
+            imagen_pil.save(ruta_guardado)
+            tk.messagebox.showinfo("Guardado", f"Imagen guardada correctamente en: {ruta_guardado}")
+
 # Crear la ventana principal
 ventana = tk.Tk()
 ventana.title("Erosión y Dilatación Interactiva")
@@ -236,6 +244,9 @@ boton_erosion.pack(pady=5)
 
 boton_dilatacion = tk.Button(ventana, text="Aplicar Dilatación", command=aplicar_dilatacion)
 boton_dilatacion.pack(pady=5)
+
+boton_guardar = tk.Button(ventana, text="Guardar Imagen", command=guardar_imagen)
+boton_guardar.pack()
 
 # Etiquetas para mostrar tiempos de ejecución
 time_parallel_label = tk.Label(ventana, text="Tiempo paralelo: ")
