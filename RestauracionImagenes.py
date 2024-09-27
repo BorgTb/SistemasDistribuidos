@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image, ImageTk
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import threading
 import time
 import psutil
@@ -11,24 +11,19 @@ def cargar_imagen(ruta):
     img = Image.open(ruta)
     return np.array(img), img
 
-import numpy as np
-
+# Funciones para erosión y dilatación (mismas que las proporcionadas antes)
+# Función para la erosión
 def erosion(imagen, kernel, figura):
-    # Verificar si la imagen tiene más de un canal (RGB) o es en escala de grises
     if len(imagen.shape) == 3:
         filas, columnas, canales = imagen.shape
     else:
         filas, columnas = imagen.shape
         canales = 1
-        imagen = np.expand_dims(imagen, axis=-1)  # Expandir a 3D para que funcione igual para grayscale
+        imagen = np.expand_dims(imagen, axis=-1)  
 
-    # Crear una imagen de resultados con las mismas dimensiones
     resultado = np.zeros_like(imagen)
-
-    # Expandir la matriz de imagen con padding para manejar bordes
     matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')
 
-    # Mapeo de figuras a los offsets de vecinos
     vecinos = {
         1: [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)],
         2: [(0, 0), (-1, 0), (0, -1)],
@@ -38,42 +33,31 @@ def erosion(imagen, kernel, figura):
         6: [(0, 0), (-1, 1), (-1, -1), (1, 1), (1, -1)]
     }
 
-    # Obtener los desplazamientos de los vecinos según la figura seleccionada
     offsets = vecinos[figura]
-
-    # Procesar la erosión para cada canal (en caso de imágenes RGB) o para la única capa de escala de grises
     for c in range(canales):
-        # Extraemos las ventanas correspondientes a los vecinos para cada offset
         ventanas = [matrizExpandida[1+dx:filas+1+dx, 1+dy:columnas+1+dy, c] for dx, dy in offsets]
-        # Calculamos el mínimo a lo largo de las ventanas
         resultado[..., c] = np.min(ventanas, axis=0)
 
-    # Si era una imagen en escala de grises, devolvemos el formato 2D original
     if canales == 1:
         resultado = np.squeeze(resultado, axis=-1)
 
     return resultado
 
-
 # Función de dilatación corregida
 def dilatacion(imagen, kernel, figura):
-    # Verificar si la imagen es en escala de grises o en color
-    if len(imagen.shape) == 3:  # RGB
+    if len(imagen.shape) == 3:  
         filas, columnas, canales = imagen.shape
-    else:  # Grayscale
+    else:  
         filas, columnas = imagen.shape
         canales = 1
 
-    # Crear un array de resultados
     resultado = np.zeros_like(imagen, dtype=np.uint8)
 
-    # Expandir la matriz para evitar problemas en los bordes
     if canales > 1:
         matrizExpandida = np.pad(imagen, ((1, 1), (1, 1), (0, 0)), mode='edge')
     else:
         matrizExpandida = np.pad(imagen, ((1, 1), (1, 1)), mode='edge')
 
-    # Mapeo de figuras a las coordenadas de vecindad
     figuras_vecinos = {
         1: [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)],
         2: [(0, 0), (-1, 0), (0, -1)],
@@ -85,16 +69,14 @@ def dilatacion(imagen, kernel, figura):
 
     vecinos = figuras_vecinos.get(figura, [])
     
-    # Procesar dilatación para cada canal si es RGB
     if canales > 1:
         for c in range(canales):
             for dx, dy in vecinos:
                 resultado[..., c] = np.maximum(resultado[..., c], matrizExpandida[1+dx:filas+1+dx, 1+dy:columnas+1+dy, c])
-    else:  # Procesar para escala de grises
+    else:  
         for dx, dy in vecinos:
             resultado = np.maximum(resultado, matrizExpandida[1+dx:filas+1+dx, 1+dy:columnas+1+dy])
 
-    # Asegurarnos de que los valores de píxeles se mantengan en el rango 0-255
     resultado = np.clip(resultado, 0, 255)
     return resultado.astype(np.uint8)
 
@@ -114,8 +96,13 @@ def aplicar_erosion():
 
     def proceso_erosion():
         global img_rgb
+        start_time = time.time()
         img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        time_sequential_label.config(text=f"Tiempo secuencial: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
+        actualizar_recursos()
 
     if modo_paralelo.get():
         threading.Thread(target=proceso_erosion).start()
@@ -129,8 +116,13 @@ def aplicar_dilatacion():
 
     def proceso_dilatacion():
         global img_rgb
+        start_time = time.time()
         img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        time_sequential_label.config(text=f"Tiempo secuencial: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
+        actualizar_recursos()
 
     if modo_paralelo.get():
         threading.Thread(target=proceso_dilatacion).start()
@@ -151,7 +143,14 @@ def guardar_imagen():
         if ruta_guardado:
             imagen_pil = Image.fromarray(img_rgb)
             imagen_pil.save(ruta_guardado)
-            tk.messagebox.showinfo("Guardado", f"Imagen guardada correctamente en: {ruta_guardado}")
+            messagebox.showinfo("Guardado", f"Imagen guardada correctamente en: {ruta_guardado}")
+
+# Función para actualizar los recursos de CPU y memoria
+def actualizar_recursos():
+    cpu_usada = psutil.cpu_percent(interval=1)
+    memoria_usada = psutil.virtual_memory().percent
+    cpu_label.config(text=f"CPU usada: {cpu_usada}%")
+    memory_label.config(text=f"Memoria usada: {memoria_usada}%")
 
 # Crear la ventana principal
 ventana = tk.Tk()
@@ -173,9 +172,12 @@ figura_seleccionada = tk.IntVar()
 marco_figura = tk.Frame(ventana)
 marco_figura.pack(pady=10)
 
-# Botones para seleccionar figura
+# Cargar imágenes para los botones de figura
+imagenes_botones = [ImageTk.PhotoImage(Image.open(f"img/botones/btn{i+1}.png")) for i in range(6)]
+
+# Botones para seleccionar figura con imágenes
 for i in range(6):
-    boton_figura = tk.Radiobutton(marco_figura, variable=figura_seleccionada, value=i + 1, text=f"Figura {i+1}", indicatoron=False, padx=10, pady=10)
+    boton_figura = tk.Radiobutton(marco_figura, variable=figura_seleccionada, value=i + 1, image=imagenes_botones[i], indicatoron=False, padx=10, pady=10)
     boton_figura.pack(side=tk.LEFT)
 
 # Botones de acción
@@ -190,6 +192,19 @@ boton_dilatacion.pack(pady=5)
 
 boton_guardar = tk.Button(ventana, text="Guardar Imagen", command=guardar_imagen)
 boton_guardar.pack()
+
+# Etiquetas para mostrar el tiempo y uso de recursos
+time_parallel_label = tk.Label(ventana, text="Tiempo paralelo: ")
+time_parallel_label.pack()
+
+time_sequential_label = tk.Label(ventana, text="Tiempo secuencial: ")
+time_sequential_label.pack()
+
+memory_label = tk.Label(ventana, text="Memoria usada: ")
+memory_label.pack()
+
+cpu_label = tk.Label(ventana, text="CPU usada: ")
+cpu_label.pack()
 
 # Opción para seleccionar modo de ejecución
 modo_paralelo = tk.BooleanVar()
