@@ -100,7 +100,7 @@ def aplicar_erosion():
         img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
         elapsed_time = end_time - start_time
-        time_sequential_label.config(text=f"Tiempo secuencial: {elapsed_time:.4f} segundos")
+        time_sequential_label.config(text=f"Tiempo Ejecucion: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
         actualizar_recursos()
 
@@ -120,7 +120,7 @@ def aplicar_dilatacion():
         img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
         elapsed_time = end_time - start_time
-        time_sequential_label.config(text=f"Tiempo secuencial: {elapsed_time:.4f} segundos")
+        time_sequential_label.config(text=f"Tiempo Ejecucion: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
         actualizar_recursos()
 
@@ -132,10 +132,14 @@ def aplicar_dilatacion():
 # Función para cargar la imagen desde el archivo y mostrarla
 def abrir_imagen():
     ruta_imagen = filedialog.askopenfilename(filetypes=[("PNG Images", "*.png")])
+    
     if ruta_imagen:
         global img_rgb, img_pil
         img_rgb, img_pil = cargar_imagen(ruta_imagen)
         mostrar_imagen(img_rgb, "Imagen Original")
+        mostrar_tamanyo_imagen()
+        
+        
 
 def guardar_imagen():
     if img_rgb is not None:
@@ -151,6 +155,11 @@ def actualizar_recursos():
     memoria_usada = psutil.virtual_memory().percent
     cpu_label.config(text=f"CPU usada: {cpu_usada}%")
     memory_label.config(text=f"Memoria usada: {memoria_usada}%")
+def mostrar_tamanyo_imagen():
+    if img_rgb is not None:
+        filas, columnas = img_rgb.shape[:2]
+        tamano_label.config(text=f"Tamaño de la imagen: {columnas} x {filas} píxeles")
+
 
 # Crear la ventana principal
 ventana = tk.Tk()
@@ -193,11 +202,8 @@ boton_dilatacion.pack(pady=5)
 boton_guardar = tk.Button(ventana, text="Guardar Imagen", command=guardar_imagen)
 boton_guardar.pack()
 
-# Etiquetas para mostrar el tiempo y uso de recursos
-time_parallel_label = tk.Label(ventana, text="Tiempo paralelo: ")
-time_parallel_label.pack()
 
-time_sequential_label = tk.Label(ventana, text="Tiempo secuencial: ")
+time_sequential_label = tk.Label(ventana, text="Tiempo Ejecucion: ")
 time_sequential_label.pack()
 
 memory_label = tk.Label(ventana, text="Memoria usada: ")
@@ -205,6 +211,10 @@ memory_label.pack()
 
 cpu_label = tk.Label(ventana, text="CPU usada: ")
 cpu_label.pack()
+
+
+tamano_label = tk.Label(ventana, text="Tamaño de la imagen: ")
+tamano_label.pack()
 
 # Opción para seleccionar modo de ejecución
 modo_paralelo = tk.BooleanVar()
