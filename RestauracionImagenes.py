@@ -9,7 +9,7 @@ import psutil  # Para medir el uso de recursos
 # Función para cargar la imagen
 def cargar_imagen(ruta):
     img = Image.open(ruta)  # Cargar en modo RGB
-    return np.array(img)
+    return np.array(img), img  # Devolver la imagen como array y como objeto PIL
 
 # Función de erosión manual según la figura seleccionada
 def erosion(imagen, kernel, figura):
@@ -113,13 +113,13 @@ def dilatacion(imagen, kernel, figura):
                 raise ValueError("Figura no válida. Elige una figura entre 1 y 6.")
     return resultado
 
-# Función para mostrar una imagen en la ventana de Tkinter
-def mostrar_imagen(imagen_np, titulo):
-    imagen_pil = Image.fromarray(imagen_np)
+# Función para mostrar una imagen en el canvas de Tkinter
+def mostrar_imagen(imagen_pil, titulo):
+    # Convertir la imagen PIL a un formato que Tkinter pueda usar
     imagen_tk = ImageTk.PhotoImage(imagen_pil)
-    
-    label_imagen.config(image=imagen_tk)
-    label_imagen.image = imagen_tk  # Necesario para que Tkinter mantenga la referencia
+    canvas.config(scrollregion=canvas.bbox("all"))  # Actualizar el scrollregion del canvas
+    canvas.create_image(0, 0, anchor="nw", image=imagen_tk)
+    canvas.image = imagen_tk  # Mantener la referencia a la imagen
 
     ventana.title(titulo)
 
@@ -203,9 +203,9 @@ def aplicar_dilatacion():
 def abrir_imagen():
     ruta_imagen = filedialog.askopenfilename(filetypes=[("PNG Images", "*.png")])
     if ruta_imagen:
-        global img_rgb
-        img_rgb = cargar_imagen(ruta_imagen)
-        mostrar_imagen(img_rgb, "Imagen Original")
+        global img_rgb, img_pil
+        img_rgb, img_pil = cargar_imagen(ruta_imagen)
+        mostrar_imagen(img_pil, "Imagen Original")
 
 def guardar_imagen():
     if img_rgb is not None:
@@ -219,6 +219,18 @@ def guardar_imagen():
 ventana = tk.Tk()
 ventana.title("Erosión y Dilatación Interactiva")
 ventana.geometry("1240x960")
+
+# Crear un canvas y añadir scrollbars
+canvas = tk.Canvas(ventana, bg="white")
+scroll_x = tk.Scrollbar(ventana, orient="horizontal", command=canvas.xview)
+scroll_y = tk.Scrollbar(ventana, orient="vertical", command=canvas.yview)
+
+canvas.configure(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
+
+# Configurar el layout
+scroll_x.pack(side="bottom", fill="x")
+scroll_y.pack(side="right", fill="y")
+canvas.pack(side="left", fill="both", expand=True)
 
 # Crear el marco de selección de figura
 figura_seleccionada = tk.IntVar()
@@ -270,6 +282,5 @@ check_modo.pack()
 # Crear una etiqueta para mostrar la imagen
 label_imagen = tk.Label(ventana)
 label_imagen.pack(pady=10)
-
 # Iniciar el bucle principal de la ventana
 ventana.mainloop()
