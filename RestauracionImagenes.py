@@ -128,7 +128,7 @@ def aplicar_erosion():
         global img_rgb
         start_time = time.time()
         if modo_paralelo.get():
-            img_rgb = erosion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=4)  # Ajusta num_hilos según tu hardware
+            img_rgb = erosion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=4)  
         else:
             img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
@@ -148,7 +148,7 @@ def aplicar_dilatacion():
         global img_rgb
         start_time = time.time()
         if modo_paralelo.get():
-            img_rgb = dilatacion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=4)  # Ajusta num_hilos según tu hardware
+            img_rgb = dilatacion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=4)  
         else:
             img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
