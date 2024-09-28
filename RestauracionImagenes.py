@@ -5,14 +5,14 @@ from tkinter import filedialog, messagebox
 import threading
 import time
 import psutil
+import concurrent.futures
 
 # Función para cargar la imagen
 def cargar_imagen(ruta):
     img = Image.open(ruta)
     return np.array(img), img
 
-# Funciones para erosión y dilatación (mismas que las proporcionadas antes)
-# Función para la erosión
+# Función de erosión
 def erosion(imagen, kernel, figura):
     if len(imagen.shape) == 3:
         filas, columnas, canales = imagen.shape
@@ -43,7 +43,7 @@ def erosion(imagen, kernel, figura):
 
     return resultado
 
-# Función de dilatación corregida
+# Función de dilatación
 def dilatacion(imagen, kernel, figura):
     if len(imagen.shape) == 3:  
         filas, columnas, canales = imagen.shape
@@ -80,6 +80,36 @@ def dilatacion(imagen, kernel, figura):
     resultado = np.clip(resultado, 0, 255)
     return resultado.astype(np.uint8)
 
+# Función para dividir la imagen en partes
+def dividir_imagen(imagen, num_partes):
+    return np.array_split(imagen, num_partes, axis=0)  # Dividir por filas
+
+# Función para unir las partes de la imagen
+def unir_imagen(partes):
+    return np.vstack(partes)
+
+# Función de erosión modificada para recibir un segmento de la imagen
+def erosion_parcial(segmento, kernel, figura):
+    return erosion(segmento, kernel, figura)
+
+# Función de dilatación modificada para recibir un segmento de la imagen
+def dilatacion_parcial(segmento, kernel, figura):
+    return dilatacion(segmento, kernel, figura)
+
+# Función para ejecutar erosión en paralelo
+def erosion_multihilo(imagen, kernel, figura, num_hilos):
+    partes = dividir_imagen(imagen, num_hilos)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        resultados = list(executor.map(erosion_parcial, partes, [kernel] * num_hilos, [figura] * num_hilos))
+    return unir_imagen(resultados)
+
+# Función para ejecutar dilatación en paralelo
+def dilatacion_multihilo(imagen, kernel, figura, num_hilos):
+    partes = dividir_imagen(imagen, num_hilos)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        resultados = list(executor.map(dilatacion_parcial, partes, [kernel] * num_hilos, [figura] * num_hilos))
+    return unir_imagen(resultados)
+
 # Función para mostrar la imagen en el canvas de Tkinter
 def mostrar_imagen(imagen_array, titulo):
     imagen_pil = Image.fromarray(imagen_array.astype('uint8'))
@@ -97,17 +127,17 @@ def aplicar_erosion():
     def proceso_erosion():
         global img_rgb
         start_time = time.time()
-        img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
+        if modo_paralelo.get():
+            img_rgb = erosion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=4)  # Ajusta num_hilos según tu hardware
+        else:
+            img_rgb = erosion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
         elapsed_time = end_time - start_time
         time_sequential_label.config(text=f"Tiempo Ejecucion: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Erosión Figura {figura_seleccionada.get()} Aplicada")
         actualizar_recursos()
 
-    if modo_paralelo.get():
-        threading.Thread(target=proceso_erosion).start()
-    else:
-        proceso_erosion()
+    threading.Thread(target=proceso_erosion).start()
 
 # Función para aplicar dilatación
 def aplicar_dilatacion():
@@ -117,17 +147,17 @@ def aplicar_dilatacion():
     def proceso_dilatacion():
         global img_rgb
         start_time = time.time()
-        img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
+        if modo_paralelo.get():
+            img_rgb = dilatacion_multihilo(img_rgb, kernel, figura_seleccionada.get(), num_hilos=40)  # Ajusta num_hilos según tu hardware
+        else:
+            img_rgb = dilatacion(img_rgb, kernel, figura_seleccionada.get())
         end_time = time.time()
         elapsed_time = end_time - start_time
         time_sequential_label.config(text=f"Tiempo Ejecucion: {elapsed_time:.4f} segundos")
         mostrar_imagen(img_rgb, f"Dilatación Figura {figura_seleccionada.get()} Aplicada")
         actualizar_recursos()
 
-    if modo_paralelo.get():
-        threading.Thread(target=proceso_dilatacion).start()
-    else:
-        proceso_dilatacion()
+    threading.Thread(target=proceso_dilatacion).start()
 
 # Función para cargar la imagen desde el archivo y mostrarla
 def abrir_imagen():
